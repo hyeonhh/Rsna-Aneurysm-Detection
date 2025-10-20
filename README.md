@@ -310,3 +310,8 @@ The contrast is adjusted via the window width.
   ### 데이터 전처리
   - 대용량 원본 데이터 중 필요한 데이터만 찾아볼 수 있도록 걸러낼 방법을 생각해보자
   
+## 모델 구성해보기
+- 이전에는 다른 사람이 만든 모델을 통해 코드가 작동하는 방식, 입력 데이터와 모델을 연결하는 방식을 익혔다면, 이제 성능이 나쁘더라고 모델을 직접 구현해보려고 한다.
+
+- <img width="716" height="549" alt="image" src="https://github.com/user-attachments/assets/986b5709-74b6-4c8f-85bd-d34559d55689" />
+- (출처 : Deeplearning with pytorch)
