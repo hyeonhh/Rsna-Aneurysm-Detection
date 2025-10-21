@@ -1,4 +1,4 @@
-# Rsna-Aneurysm-Detection
+# Rsna-Aneurysm-Detection : [분류 모델]파트
 - https://www.kaggle.com/competitions/rsna-intracranial-aneurysm-detection/overview competition 실습 과정 기록을 위한 레포
 
 ### 데이터 구조 살펴보기
