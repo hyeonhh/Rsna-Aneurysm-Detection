@@ -352,3 +352,48 @@ The contrast is adjusted via the window width.
    - RSNADataset의 `__len__`과 `__getitem__`을 구현했으므로 `DataLoader(train_ds)`를 만들면 내부적으로 `for idx in range(len(train_ds)):` 처럼 인덱스를 자동으로 생성해서 `trian_ds.__getitem__(ds)`를 반복적으로 호출해준다.
    - 결론적으로, `series_uid`를 직접 넘겨주거나 반복문을 작성할 필요 업이 `DataLoader`가 알아서 각 인덱스에 해당하는 `series_uid`를 가져와 DICOM 볼륨을 반환하는 구조 !! 
   
+#### 모델 입출력 데이터 사이즈 
+- 각 series_uid별 volume shape : `(32, 384, 384)`
+- input_t.shape : `torch.Size([4, 1, 32, 384, 384])`
+    - 배치 크기 4
+    - 채널 크기 1
+    - 깊이 32, 높이 384, 너비 384 
+- input_Batch.shape :` torch.Size([2, 1, 32, 384, 384])`
+    - 배치 크기 2
+- block_out.shape : `torch.Size([2, 64, 2, 24, 24])`
+    - 배치 크기 2
+    - 채널 수 64로 증가
+    - 깊이 2, 높이 24, 너비 24 
+- conv_flat.shape : torch.Size([2, 73728])
+    - block_out을 2D 텐서로 평탄화 64 * 2 * 24 * 2
+    - 배치 크기 2,
+####  모델 입출력 형태
+- <img width="661" height="217" alt="image" src="https://github.com/user-attachments/assets/9135034d-cfef-43a1-8e75-55fa5783a574" />
+- 클래스 인덱스(class indices)를 정답으로 넘기는 경우 target의 데이터 타입은 반드시 long
+    - 예를 들어 [0][2][1] 처럼 각 원소가 정수형(long)이어야한다.
+- 클래스 확률을 정답으로 넘기는 경우
+    - target의 데이터타입은 반드시 float이어야하고 값은 0과 1사이이다.
+    - 예 `[0., 1.]`, ` [0.2, 0.8]  `
+
+```python
+# Example of target with class indices
+loss = nn.CrossEntropyLoss()
+input = torch.randn(3, 5, requires_grad=True)
+target = torch.empty(3, dtype=torch.long).random_(5) #.long을 해준다.
+output = loss(input, target)
+output.backward()
+
+# Example of target with class probabilities
+input = torch.randn(3, 5, requires_grad=True)
+target = torch.randn(3, 5).softmax(dim=1)
+output = loss(input, target)
+output.backward()
+```
+
+#### 만들어진 volume 저장하기
+- 매번 dicom 이미지를 volume으로 만드는 작업이 너 ~~ 무 오래 걸린다.
+- 그래서 방법을 찾아보다가 데이터셋으로 저장할 수 있다는 걸 알게되었다!
+- series_uid에 맞는 dicom 이미지가 만들어지면 저장하도록 했다.
+- 이후 코드 실행 시 저장된 파일이 없는 경우에만 전처리를 하고, 있는 경우 해당 volume을 불러와서 쓰도록 한다.
+- <img width="349" height="221" alt="image" src="https://github.com/user-attachments/assets/95a3f714-183a-4191-9c37-fa1d297a1e26" />
+
