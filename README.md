@@ -307,11 +307,48 @@ The contrast is adjusted via the window width.
     ```
   ----
 
-  ### 데이터 전처리
+  ### 데이터 훈련시켜보기 
   - 대용량 원본 데이터 중 필요한 데이터만 찾아볼 수 있도록 걸러낼 방법을 생각해보자
-  
+    
 ## 모델 구성해보기
 - 이전에는 다른 사람이 만든 모델을 통해 코드가 작동하는 방식, 입력 데이터와 모델을 연결하는 방식을 익혔다면, 이제 성능이 나쁘더라고 모델을 직접 구현해보려고 한다.
 
 - <img width="716" height="549" alt="image" src="https://github.com/user-attachments/assets/986b5709-74b6-4c8f-85bd-d34559d55689" />
 - (출처 : Deeplearning with pytorch)
+
+### 먼저 Dataset과 DataLoader 코드 작성
+- Dataset & DataLoader 코드 짜보기
+    ```python
+    class RSNADataset(Dataset):
+    def __init__(self,df):
+        self.df = df
+        self.series_uids = df['SeriesInstanceUID']
+        
+    def __len__(self):
+        return len(self.series_uids)
+    def __getitem__(self,ndx):
+        try:
+            series_uid = self.series_uids[ndx]
+            path = os.path.join(SERIES_PATH, series_uid)
+            volume = process_dicom_series_safe(path)
+            # label도 같이 넘기기
+            label = self.df[ndx]['Aneurysm Present']
+            
+        except Excepting as e:
+            print(f"RSNA dataset : Error occurs while get item : {series_uid}")
+            volume = None
+            label = None
+        return volume,label
+    ```
+
+    ```python
+    ## DataLoader
+    train_ds = RSNADataset(train_copy)
+    train_loader = torch.utils.data.DataLoader(train_ds,batch_size = 10, shuffle= True)
+    ```
+
+#### series_uid별로 폴더가 구성되어있고, 내부에 dicom 이미지 파일이 있는데 series_uid로 반복문을 작성해야할까?
+   - RSNADataset에서 DataLoader를 연결하면,  DataLoader가 series_uid들을 자동으로 호출해서 데이터를 불러온다.
+   - RSNADataset의 `__len__`과 `__getitem__`을 구현했으므로 `DataLoader(train_ds)`를 만들면 내부적으로 `for idx in range(len(train_ds)):` 처럼 인덱스를 자동으로 생성해서 `trian_ds.__getitem__(ds)`를 반복적으로 호출해준다.
+   - 결론적으로, `series_uid`를 직접 넘겨주거나 반복문을 작성할 필요 업이 `DataLoader`가 알아서 각 인덱스에 해당하는 `series_uid`를 가져와 DICOM 볼륨을 반환하는 구조 !! 
+  
