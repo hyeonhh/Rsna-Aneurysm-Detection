@@ -374,6 +374,8 @@ The contrast is adjusted via the window width.
 - 클래스 확률을 정답으로 넘기는 경우
     - target의 데이터타입은 반드시 float이어야하고 값은 0과 1사이이다.
     - 예 `[0., 1.]`, ` [0.2, 0.8]  `
+ 
+- RSNA 데이터의 경우 출력이 is_aneasrm 클래스에 대해 0 또는 1이다.  이 경우 float로 만들어줘야한다.
 
 ```python
 # Example of target with class indices
@@ -397,3 +399,43 @@ output.backward()
 - 이후 코드 실행 시 저장된 파일이 없는 경우에만 전처리를 하고, 있는 경우 해당 volume을 불러와서 쓰도록 한다.
 - <img width="349" height="221" alt="image" src="https://github.com/user-attachments/assets/95a3f714-183a-4191-9c37-fa1d297a1e26" />
 
+### 인덱스 0부터 2번째 까지의 데이터로 테스트해보기 
+#### 검증은 어덯게 이루어지나?
+- 평가모드로 전환
+    - with torch.no_grad(): 내부에서  실행되어 그래디언트 계산이 꺼진 상태로 진행
+    - self.model.eval()을 호출해 모델을 추론 모드로 전환한다.
+- valMetrics_g : 라벨, 예측값, 손실값을 저장한다.
+-  배치 단위 반복
+    - 검증 데이터 로더인 val_dl로부터 배치별로 데이터를 받아서, computeBatchLoss를 호출해 예측, 손실, 지표 계산을 수행한다.
+- 결과 반환
+    - 전체 검증 데이터셋에 대해 반복한 후 cpu로 옮긴 지표 텐서를 반환한다.   
+``` python
+def doValidation(self, epoch_ndx, val_dl):
+    with torch.no_grad():
+        self.model.eval() 
+        valMetrics_g = torch.zeros(3,
+        len(val_dl.dataset),
+        device = self.device)
+    batch_iter =  enumerateWithEstimate(val_dl,"E{} validation".format(epoch_ndx),start_ndx = val_dl.num_workers)
+    for batch_ndx, batch_tup in batch_iter:
+        self.computeBatchLoss(
+            batch_ndx, batch_tup, val_dl.batch_size, valMetrics_g
+            )
+    return valMetrics_g.to('cpu')         
+```
+- 
+### predict 메소드 구현에 필요한 사항 정리하기
+- 모델 평가를 위한 서버가 이미 구축되어있기 때문에 우리는 predict 메소드만 정의해주면 된다.
+```python
+def predict(series_path):
+# 1. Make a prediction
+
+# 2. Collect tag from the dicoms
+
+# 3. pandas의 dataframe형태인 predictions  만들기
+
+# 4. shutil.rmtree('/kaggle/shared', ignore_errors=True)를 구현해줘야함
+# 5. predictions에서 ID_COL를 제외하고 반환해준다.
+`predictions.drop(ID_COL) 
+`
+```
