@@ -1,0 +1,14 @@
+# DICOM 데이터 속성 알아보기
+- Slice Location : Relative position of the image plane expressed in mm
+  - 슬라이스 평면이 기준점에서 얼마나 떨어져 있는지를 나타내는 상대적 좌표
+- Image Position (Patient) : The x, y, and z coordinates of the upper left hand corner (center of the first voxel transmitted) of the image, in mm
+  - 해당 슬라이스의 (0,0) 픽셀이 환자 좌표계에서 어디에 위치하는지 절대 3D 좌표
+- 데이터를 정렬할 때는 어떤 걸 이용해야할까?
+  - 어떤 때는 Slice Location 로 정렬하는 코드도 있고, Image Position (Patient) 를 사용해야한다는 코드도 있고,,,
+  - 때에 따라서 Slice Location으로도 정렬할 수 있다지만, 이건 상대적인것이고, 맞지 않을 경우가 존재할 것이다. 정확한 것 Image Position(Patient)를 이용하는 것 !!!
+  - https://stackoverflow.com/questions/40138092/dicom-relating-slice-location-to-image-orientation-and-patient-position
+- 읽어볼 자료
+  - https://nipy.org/nibabel/dicom/dicom_orientation.html
+  - https://dicom.innolitics.com/ciods/ct-image/image-plane/00200032
+  - https://www.kaggle.com/code/davidbroberts/determining-dicom-image-order
+  - https://dicomiseasy.blogspot.com/2013/06/getting-oriented-using-image-plane.html -> 이거 추천!! 
